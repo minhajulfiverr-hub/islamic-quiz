@@ -1,144 +1,131 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ইসলামিক কুইজ গেম</title>
-<style>
-body{
-font-family: Arial;
-background: linear-gradient(135deg,#141e30,#243b55);
-color:white;
-text-align:center;
-padding:20px;
-}
-.quiz-box{
-background: rgba(255,255,255,0.1);
-padding:20px;
-border-radius:15px;
-max-width:450px;
-margin:auto;
-box-shadow:0 0 20px rgba(0,0,0,0.6);
-}
-button{
-display:block;
-width:100%;
-margin:8px 0;
-padding:10px;
-border:none;
-border-radius:8px;
-background:#00c9a7;
-color:white;
-font-size:15px;
-cursor:pointer;
-}
-button:hover{ background:#00b894; }
-#result{ margin-top:10px; font-weight:bold; }
-#score,#level{ margin-top:10px; font-size:18px; color:#ffd700; }
-</style>
-</head>
-<body>
+<div id="levelMenu">
+  <h2>Select Level</h2>
+  <button onclick="startLevel(1)">Level 1</button>
+  <button onclick="startLevel(2)">Level 2 🔒</button>
+  <button onclick="startLevel(3)">Level 3 🔒</button>
+</div>
 
-<h2>🌙 ইসলামিক কুইজ গেম</h2>
-
-<div class="quiz-box">
-<h3 id="level">Level 1</h3>
-<p id="question"></p>
-<div id="options"></div>
-<div id="result"></div>
-<div id="score">পয়েন্ট: 0</div>
+<div id="quizBox" style="display:none;">
+  <h3 id="levelTitle"></h3>
+  <h2 id="question"></h2>
+  <div id="options"></div>
+  <button onclick="nextQuestion()">Next</button>
+  <p id="result"></p>
 </div>
 
 <script>
-
-let score = 0;
-let level = 1;
-let questionCount = 3;
-let currentQuestion = 0;
-
-function generateQuestion(){
-const questions = [
-"কুরআনের প্রথম সূরা কোনটি?",
-"ইসলামের প্রথম খলিফা কে?",
-"নবীজি (সা:) কোথায় জন্মগ্রহণ করেন?",
-"রোজা কত হিজরিতে ফরজ হয়?",
-"হিজরত কোন শহরে হয়েছিল?",
-"বদর যুদ্ধ কত সালে হয়েছিল?",
-"কাবা ঘর কে নির্মাণ করেন?",
-"ইসলামের প্রথম শহীদ কে?"
-];
-
-const options = [
-["সূরা বাকারা","সূরা ফাতিহা","সূরা নাস","সূরা ইখলাস"],
-["উমর (রা:)","আবু বকর (রা:)","আলী (রা:)","উসমান (রা:)"],
-["মদিনা","মক্কা","তাইফ","কুফা"],
-["২ হিজরি","১ হিজরি","৫ হিজরি","৩ হিজরি"],
-["মক্কা","তাইফ","মদিনা","বসরা"],
-["২ হিজরি","৩ হিজরি","১ হিজরি","৫ হিজরি"],
-["ইবরাহিম (আ:)","মুসা (আ:)","নুহ (আ:)","ইউসুফ (আ:)"],
-["সুমাইয়া (রা:)","বিলাল (রা:)","হামজা (রা:)","আলী (রা:)"]
-];
-
-let randomIndex = Math.floor(Math.random()*questions.length);
-
-return {
-question: questions[randomIndex],
-options: options[randomIndex],
-answer: 1
+const quizLevels = {
+  1: {
+    passMark: 3,
+    questions: [
+      { q: "Camera কী?", options: ["ছবি তোলার যন্ত্র", "ঘড়ি", "গেম", "টিভি"], answer: 0 },
+      { q: "Lens কী কাজ করে?", options: ["ফোকাস করে", "চার্জ দেয়", "গান বাজায়", "ডাটা মুছে"], answer: 0 },
+      { q: "Tripod কেন ব্যবহার হয়?", options: ["স্থির রাখে", "আলো দেয়", "Zoom করে", "রং বদলায়"], answer: 0 }
+    ]
+  },
+  2: {
+    passMark: 2,
+    questions: [
+      { q: "ISO কী নিয়ন্ত্রণ করে?", options: ["Light sensitivity", "Zoom", "Battery", "Color"], answer: 0 },
+      { q: "Aperture কী?", options: ["Lens opening", "Battery", "Flash", "Sensor"], answer: 0 },
+      { q: "Shutter speed কী?", options: ["Exposure time", "Zoom", "Battery", "Sound"], answer: 0 }
+    ]
+  },
+  3: {
+    passMark: 2,
+    questions: [
+      { q: "RAW ফাইল কী?", options: ["Uncompressed image", "JPEG", "MP3", "MP4"], answer: 0 },
+      { q: "White balance কী ঠিক করে?", options: ["Color tone", "Zoom", "Battery", "Flash"], answer: 0 },
+      { q: "4K মানে?", options: ["High resolution video", "Battery", "ISO", "Lens"], answer: 0 }
+    ]
+  }
 };
+
+let unlockedLevel = 1;
+let currentLevel = 1;
+let currentQuestion = 0;
+let score = 0;
+let selectedAnswer = null;
+
+function startLevel(level) {
+  if (level > unlockedLevel) {
+    alert("আগের লেভেল পাস করতে হবে!");
+    return;
+  }
+
+  currentLevel = level;
+  currentQuestion = 0;
+  score = 0;
+
+  document.getElementById("levelMenu").style.display = "none";
+  document.getElementById("quizBox").style.display = "block";
+  document.getElementById("levelTitle").innerText = "Level " + level;
+
+  loadQuestion();
 }
 
-let currentData;
+function loadQuestion() {
+  const questionData = quizLevels[currentLevel].questions[currentQuestion];
+  document.getElementById("question").innerText = questionData.q;
 
-function loadQuestion(){
-if(currentQuestion >= questionCount){
-levelUp();
-return;
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+
+  questionData.options.forEach((option, index) => {
+    const btn = document.createElement("button");
+    btn.innerText = option;
+    btn.style.display = "block";
+    btn.style.margin = "5px 0";
+    btn.onclick = () => selectAnswer(index);
+    optionsDiv.appendChild(btn);
+  });
 }
 
-currentData = generateQuestion();
-document.getElementById("question").innerText = currentData.question;
-
-let optHTML="";
-currentData.options.forEach((opt,index)=>{
-optHTML += `<button onclick="checkAnswer(${index})">${opt}</button>`;
-});
-document.getElementById("options").innerHTML = optHTML;
+function selectAnswer(index) {
+  selectedAnswer = index;
 }
 
-function checkAnswer(index){
-if(index === currentData.answer){
-score += 20;
-document.getElementById("result").innerHTML="✅ সঠিক! ২০ পয়েন্ট যোগ হয়েছে!";
-}else{
-document.getElementById("result").innerHTML="❌ ভুল!";
-}
-document.getElementById("score").innerText="পয়েন্ট: "+score;
-currentQuestion++;
+function nextQuestion() {
+  if (selectedAnswer === null) {
+    alert("একটি উত্তর নির্বাচন করুন!");
+    return;
+  }
 
-setTimeout(()=>{
-document.getElementById("result").innerHTML="";
-loadQuestion();
-},1000);
-}
+  if (selectedAnswer === quizLevels[currentLevel].questions[currentQuestion].answer) {
+    score++;
+  }
 
-function levelUp(){
-level++;
-if(level > 20){
-document.getElementById("question").innerText="🎉 অভিনন্দন! সব লেভেল শেষ!";
-document.getElementById("options").innerHTML="";
-return;
-}
-questionCount += 2;
-currentQuestion = 0;
-document.getElementById("level").innerText="Level "+level;
-alert("🎉 লেভেল আপ! এখন "+questionCount+" টি প্রশ্ন!");
-loadQuestion();
+  selectedAnswer = null;
+  currentQuestion++;
+
+  if (currentQuestion < quizLevels[currentLevel].questions.length) {
+    loadQuestion();
+  } else {
+    finishLevel();
+  }
 }
 
-loadQuestion();
+function finishLevel() {
+  let passMark = quizLevels[currentLevel].passMark;
 
+  if (score >= passMark) {
+    alert("Level " + currentLevel + " Passed! 🎉");
+    if (currentLevel === unlockedLevel) {
+      unlockedLevel++;
+      unlockNextLevelButton();
+    }
+  } else {
+    alert("Level Failed! আবার চেষ্টা করুন.");
+  }
+
+  document.getElementById("quizBox").style.display = "none";
+  document.getElementById("levelMenu").style.display = "block";
+}
+
+function unlockNextLevelButton() {
+  const buttons = document.querySelectorAll("#levelMenu button");
+  if (unlockedLevel - 1 < buttons.length) {
+    buttons[unlockedLevel - 1].innerText = "Level " + unlockedLevel;
+  }
+}
 </script>
-
-</body>
-</html>
