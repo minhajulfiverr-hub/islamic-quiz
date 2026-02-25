@@ -3,25 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>Minhajul Pro Quiz</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body{
 margin:0;
-font-family:Arial, sans-serif;
+font-family:Arial;
 background:#4b006e;
 color:white;
 text-align:center;
 }
 
-h1{
-margin-top:25px;
-font-size:30px;
-}
+h1{margin-top:20px}
 
 .card{
 background:#2a003d;
-padding:25px;
+padding:20px;
 border-radius:25px;
 width:90%;
 max-width:420px;
@@ -30,169 +26,172 @@ box-shadow:0 10px 25px rgba(0,0,0,0.4);
 }
 
 button{
-padding:14px;
-border:none;
-border-radius:30px;
-font-size:17px;
-cursor:pointer;
+padding:12px;
 margin:8px 0;
 width:85%;
+border:none;
+border-radius:25px;
+font-size:16px;
+cursor:pointer;
 }
 
 .levelBtn{background:#ffc107;color:black;font-weight:bold;}
-.locked{background:gray;color:white;}
-.optionBtn{background:white;color:black;border-radius:15px;}
+.locked{background:gray;}
+.optionBtn{background:white;color:black;}
+.correct{background:#4caf50 !important;color:white;}
+.wrong{background:#f44336 !important;color:white;}
 .nextBtn{background:#4caf50;color:white;}
 .shareBtn{background:#e91e63;color:white;}
-
-.trophy{font-size:60px;margin-bottom:10px;}
-.hidden{display:none;}
 </style>
 </head>
+
 <body>
 
 <h1>Minhajul Pro Quiz</h1>
 
-<div id="levelSelect" class="card"></div>
-<div id="quizBox" class="card hidden"></div>
-<div id="resultBox" class="card hidden"></div>
+<div id="levelBox" class="card"></div>
+<div id="quizBox" class="card" style="display:none;"></div>
+<div id="resultBox" class="card" style="display:none;"></div>
 
 <script>
 
-const levels=[
-{name:"ফল",questions:getFruit()},
-{name:"সবজি",questions:getVeg()},
-{name:"দেশ",questions:getCountry()},
-{name:"পশু",questions:getAnimal()},
-{name:"পাখি",questions:getBird()}
+let levels = [
+{
+name:"Fruits",
+questions:[
+{q:"Which is red fruit?", options:["Banana","Apple","Mango","Guava"], answer:"Apple"},
+{q:"Yellow fruit?", options:["Mango","Apple","Orange","Grapes"], answer:"Mango"},
+{q:"Green small fruit?", options:["Guava","Lemon","Grapes","Berry"], answer:"Grapes"},
+{q:"Citrus fruit?", options:["Orange","Banana","Apple","Papaya"], answer:"Orange"},
+{q:"Soft orange fruit?", options:["Papaya","Berry","Guava","Apple"], answer:"Papaya"},
+{q:"Small red fruit?", options:["Berry","Apple","Banana","Lemon"], answer:"Berry"},
+{q:"Sour fruit?", options:["Lemon","Apple","Mango","Papaya"], answer:"Lemon"}
+]
+},
+{
+name:"Animals",
+questions:[
+{q:"King of jungle?", options:["Lion","Tiger","Cat","Dog"], answer:"Lion"},
+{q:"Big striped animal?", options:["Tiger","Lion","Cow","Goat"], answer:"Tiger"},
+{q:"Milk animal?", options:["Cow","Dog","Cat","Sheep"], answer:"Cow"},
+{q:"Pet animal?", options:["Dog","Lion","Tiger","Fox"], answer:"Dog"},
+{q:"Black white animal?", options:["Zebra","Dog","Cat","Horse"], answer:"Zebra"},
+{q:"Long neck animal?", options:["Giraffe","Lion","Tiger","Dog"], answer:"Giraffe"},
+{q:"Desert animal?", options:["Camel","Dog","Cat","Horse"], answer:"Camel"}
+]
+},
+{
+name:"Countries",
+questions:[
+{q:"Capital of Bangladesh?", options:["Dhaka","Delhi","Paris","Tokyo"], answer:"Dhaka"},
+{q:"Capital of India?", options:["Delhi","Dhaka","London","Rome"], answer:"Delhi"},
+{q:"Capital of France?", options:["Paris","London","Rome","Berlin"], answer:"Paris"},
+{q:"Capital of Japan?", options:["Tokyo","Beijing","Seoul","Bangkok"], answer:"Tokyo"},
+{q:"Capital of UK?", options:["London","Rome","Berlin","Madrid"], answer:"London"},
+{q:"Capital of Italy?", options:["Rome","Paris","Delhi","Dhaka"], answer:"Rome"},
+{q:"Capital of Germany?", options:["Berlin","Madrid","Rome","Paris"], answer:"Berlin"}
+]
+}
 ];
 
-let unlocked=localStorage.getItem("unlock")?parseInt(localStorage.getItem("unlock")):0;
-let totalScore=0;
-let levelScore=0;
-let right=0;
-let wrong=0;
 let currentLevel=0;
-let index=0;
+let currentQ=0;
+let levelScore=0;
+let totalScore=0;
+let unlocked=0;
 
-function renderLevels(){
-let html="";
-levels.forEach((lvl,i)=>{
-let locked=i>unlocked;
-html+=`<button class="${locked?'locked':'levelBtn'}"
-${locked?'disabled':''}
-onclick="startLevel(${i})">
-${locked?'🔒 ':''}Level ${i+1} - ${lvl.name}
-</button><br>`;
-});
-document.getElementById("levelSelect").innerHTML=html;
+function shuffle(arr){
+return arr.sort(()=>Math.random()-0.5);
 }
-renderLevels();
+
+function showLevels(){
+let box=document.getElementById("levelBox");
+box.innerHTML="";
+levels.forEach((lvl,i)=>{
+let btn=document.createElement("button");
+btn.innerText="Level "+(i+1)+" - "+lvl.name;
+btn.className="levelBtn";
+if(i>unlocked){
+btn.classList.add("locked");
+btn.disabled=true;
+}
+btn.onclick=()=>startLevel(i);
+box.appendChild(btn);
+});
+}
 
 function startLevel(i){
 currentLevel=i;
+currentQ=0;
 levelScore=0;
-index=0;
-document.getElementById("levelSelect").classList.add("hidden");
-document.getElementById("quizBox").classList.remove("hidden");
+document.getElementById("levelBox").style.display="none";
+document.getElementById("quizBox").style.display="block";
 showQuestion();
 }
 
 function showQuestion(){
-let q=levels[currentLevel].questions[index];
-let options=[...q.options].sort(()=>Math.random()-0.5);
-let html=`<h3>${q.question}</h3>`;
+let qObj=levels[currentLevel].questions[currentQ];
+let box=document.getElementById("quizBox");
+box.innerHTML="<h3>"+qObj.q+"</h3>";
+let options=shuffle([...qObj.options]);
 options.forEach(opt=>{
-html+=`<button class="optionBtn"
-onclick="checkAnswer('${opt}','${q.answer}')">
-${opt}</button>`;
+let btn=document.createElement("button");
+btn.innerText=opt;
+btn.className="optionBtn";
+btn.onclick=()=>checkAnswer(btn,opt,qObj.answer);
+box.appendChild(btn);
 });
-document.getElementById("quizBox").innerHTML=html;
 }
 
-function checkAnswer(selected,correct){
+function checkAnswer(btn,selected,correct){
+let buttons=document.querySelectorAll(".optionBtn");
+buttons.forEach(b=>{
+b.disabled=true;
+if(b.innerText===correct) b.classList.add("correct");
+if(b.innerText===selected && selected!==correct) b.classList.add("wrong");
+});
 if(selected===correct){
 levelScore+=10;
 totalScore+=10;
-right++;
-}else{
-wrong++;
 }
-index++;
-if(index<levels[currentLevel].questions.length){
+setTimeout(nextQuestion,1000);
+}
+
+function nextQuestion(){
+currentQ++;
+if(currentQ<levels[currentLevel].questions.length){
 showQuestion();
 }else{
-finishLevel();
-}
-}
-
-function finishLevel(){
-document.getElementById("quizBox").classList.add("hidden");
-
-if(currentLevel===unlocked){
 unlocked++;
-localStorage.setItem("unlock",unlocked);
-}
-
-if(currentLevel===levels.length-1){
-showFinal();
+if(currentLevel<levels.length-1){
+alert("Level Completed! Score: "+levelScore);
+document.getElementById("quizBox").style.display="none";
+document.getElementById("levelBox").style.display="block";
+showLevels();
 }else{
-document.getElementById("resultBox").classList.remove("hidden");
-document.getElementById("resultBox").innerHTML=
-`<h2>Level Complete!</h2>
-<p>Level Score: ${levelScore}</p>
-<button class="nextBtn" onclick="location.reload()">Back to Levels</button>`;
+showFinal();
+}
 }
 }
 
 function showFinal(){
-document.getElementById("resultBox").classList.remove("hidden");
-document.getElementById("resultBox").innerHTML=
-`<div class="trophy">🏆</div>
-<h2>Your Score</h2>
-<p>Total Question: ${levels.length*7}</p>
-<p>Right Answer: ${right}</p>
-<p>Wrong Answer: ${wrong}</p>
-<p><strong>Total Score: ${totalScore}</strong></p>
-<button class="shareBtn" onclick="shareScore()">📤 Share Score</button>
-<button class="nextBtn" onclick="location.reload()">Play Again</button>`;
+document.getElementById("quizBox").style.display="none";
+let box=document.getElementById("resultBox");
+box.style.display="block";
+box.innerHTML=
+"<h2>🏆 Final Result</h2>"+
+"<p>Total Score: "+totalScore+"</p>"+
+"<button class='shareBtn' onclick='shareScore()'>Share Score</button>"+
+"<button class='nextBtn' onclick='location.reload()'>Play Again</button>";
 }
 
 function shareScore(){
-let text="আমি Minhajul Pro Quiz এ "+totalScore+
-" পয়েন্ট পেয়েছি! তুমি পারবে আমাকে হারাতে? 😎";
-if(navigator.share){
-navigator.share({title:"Minhajul Pro Quiz",text:text});
-}else{
-window.open("https://wa.me/?text="+encodeURIComponent(text));
-}
+let text="I scored "+totalScore+" in Minhajul Pro Quiz! Play now!";
+let url=encodeURIComponent(location.href);
+window.open("https://www.facebook.com/sharer/sharer.php?u="+url+"&quote="+text);
 }
 
-/* QUESTION SET (৭টা করে) */
-
-function getFruit(){return[
-{question:"আম কি?",options:["ফল","সবজি","দেশ","পাখি"],answer:"ফল"},
-{question:"কলা কি?",options:["পশু","ফল","দেশ","সবজি"],answer:"ফল"},
-{question:"লিচু কি?",options:["ফল","দেশ","যন্ত্র","পাখি"],answer:"ফল"},
-{question:"কমলা কি?",options:["দেশ","ফল","সবজি","যন্ত্র"],answer:"ফল"},
-{question:"আনারস কি?",options:["ফল","পাখি","দেশ","সবজি"],answer:"ফল"},
-{question:"তরমুজ কি?",options:["দেশ","সবজি","ফল","যন্ত্র"],answer:"ফল"},
-{question:"আমড়া কি?",options:["ফল","দেশ","পাখি","যন্ত্র"],answer:"ফল"}
-];}
-
-function getVeg(){return[
-{question:"আলু কি?",options:["সবজি","ফল","দেশ","পাখি"],answer:"সবজি"},
-{question:"বেগুন কি?",options:["সবজি","দেশ","ফল","যন্ত্র"],answer:"সবজি"},
-{question:"গাজর কি?",options:["দেশ","পশু","সবজি","ফল"],answer:"সবজি"},
-{question:"পেঁয়াজ কি?",options:["সবজি","ফল","দেশ","পাখি"],answer:"সবজি"},
-{question:"কুমড়া কি?",options:["ফল","দেশ","সবজি","যন্ত্র"],answer:"সবজি"},
-{question:"শসা কি?",options:["সবজি","পশু","দেশ","ফল"],answer:"সবজি"},
-{question:"টমেটো কি?",options:["দেশ","সবজি","ফল","পশু"],answer:"সবজি"}
-];}
-
-function getCountry(){return getFruit();}
-function getAnimal(){return getVeg();}
-function getBird(){return getFruit();}
+showLevels();
 
 </script>
 </body>
