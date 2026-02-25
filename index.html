@@ -1,241 +1,193 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
 <title>Minhajul Pro Quiz</title>
-
 <style>
 body{
-  margin:0;
-  font-family:Arial;
-  background:#2b0040;
-  color:white;
-  text-align:center;
+font-family:Arial;
+text-align:center;
+background:linear-gradient(45deg,#2196f3,#00bcd4);
+color:white;
+padding:20px;
 }
-.screen{display:none;padding:20px;}
-.active{display:block;}
-
-.card{
-  background:#1a0026;
-  padding:20px;
-  border-radius:20px;
-  margin-top:20px;
-}
-
 button{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  border:none;
-  border-radius:25px;
-  font-size:16px;
-  cursor:pointer;
+padding:10px 20px;
+margin:6px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
 }
-
-.option{background:#32004d;color:white;}
-.correct{background:#28a745 !important;}
-.wrong{background:#dc3545 !important;}
-
-.levelBtn{background:#ffc107;color:black;font-weight:bold;}
-
-.progress{
-  height:8px;
-  background:#444;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-.bar{
-  height:8px;
-  background:#28a745;
-  width:0%;
-  border-radius:10px;
-}
-
-.shareBtn{
-  background:#ff9800;
-  color:white;
-  font-weight:bold;
-}
+.levelBtn{background:#ff9800;color:white;}
+.locked{background:gray;}
+.optionBtn{background:white;color:black;display:block;width:80%;margin:8px auto;}
+.nextBtn{background:#4caf50;color:white;}
+.shareBtn{background:#e91e63;color:white;}
 </style>
 </head>
 <body>
 
-<div id="levelScreen" class="screen active">
-  <h1>Minhajul Pro Quiz</h1>
-  <div class="card">
-    <div id="levels"></div>
-  </div>
-</div>
+<h1>Minhajul Pro Quiz</h1>
 
-<div id="quizScreen" class="screen">
-  <h2 id="levelTitle"></h2>
-  <div class="progress"><div class="bar" id="progressBar"></div></div>
-  <div class="card">
-    <h3 id="question"></h3>
-    <div id="options"></div>
-    <p id="levelScore"></p>
-  </div>
-</div>
-
-<div id="resultScreen" class="screen">
-  <div class="card">
-    <h2 id="levelResult"></h2>
-    <h3 id="totalResult"></h3>
-
-    <button class="shareBtn" onclick="shareScore()">
-      📤 Share Your Score
-    </button>
-
-    <button onclick="goHome()">Back to Levels</button>
-  </div>
-</div>
+<div id="levelSelect"></div>
+<div id="quizBox" style="display:none;"></div>
+<div id="resultBox" style="display:none;"></div>
 
 <script>
 
-const quizLevels = {
+const levels = [
+{ name:"ফল", questions:getFruit() },
+{ name:"সবজি", questions:getVeg() },
+{ name:"দেশ", questions:getCountry() },
+{ name:"যন্ত্রপাতি", questions:getTools() },
+{ name:"পশু", questions:getAnimal() },
+{ name:"পাখি", questions:getBird() },
+{ name:"ইসলামিক", questions:getIslamic() },
+{ name:"মিশ্র", questions:getMixed() }
+];
 
-1:{name:"🍎 ফল",questions:[
-{q:"কোনটি ফল?",o:["আম","গাজর","আলু","পেঁয়াজ"],a:"আম"},
-{q:"কোনটি সাইট্রাস ফল?",o:["কমলা","আলু","টমেটো","বাঁধাকপি"],a:"কমলা"},
-{q:"কোনটি গাছে ধরে?",o:["কাঁঠাল","গাজর","আলু","মূলা"],a:"কাঁঠাল"},
-{q:"লিচু কী?",o:["ফল","সবজি","মাছ","পাখি"],a:"ফল"},
-{q:"কলা কী?",o:["ফল","সবজি","দেশ","যন্ত্র"],a:"ফল"},
-{q:"আনারস কী?",o:["ফল","সবজি","ফুল","পাখি"],a:"ফল"},
-{q:"পেঁপে কী?",o:["ফল","দেশ","যন্ত্র","মাছ"],a:"ফল"}
-]},
+let unlockedLevel = localStorage.getItem("unlock")
+? parseInt(localStorage.getItem("unlock")) : 0;
 
-2:{name:"🐾 পশু-পাখি",questions:[
-{q:"জাতীয় পশু?",o:["রয়েল বেঙ্গল টাইগার","হাতি","ঘোড়া","গরু"],a:"রয়েল বেঙ্গল টাইগার"},
-{q:"কোনটি পাখি?",o:["কাক","বাঘ","গরু","ছাগল"],a:"কাক"},
-{q:"উট কোথায় থাকে?",o:["মরুভূমি","জল","গাছে","আকাশে"],a:"মরুভূমি"},
-{q:"হাতি কী?",o:["পশু","পাখি","ফল","দেশ"],a:"পশু"},
-{q:"মাছ কোথায় থাকে?",o:["জলে","গাছে","মাটিতে","আকাশে"],a:"জলে"},
-{q:"ময়ূর কী?",o:["পাখি","ফল","যন্ত্র","দেশ"],a:"পাখি"},
-{q:"বাঘ কী?",o:["পশু","ফল","পাখি","যন্ত্র"],a:"পশু"}
-]}
-
-};
-
-let currentLevel;
-let currentQuestion=0;
-let levelScore=0;
-let totalScore=0;
-
-function shuffle(array){
-  return array.sort(()=>Math.random()-0.5);
-}
+let totalScore = 0;
+let levelScore = 0;
+let currentLevel = 0;
+let questionIndex = 0;
 
 function renderLevels(){
-  const div=document.getElementById("levels");
-  div.innerHTML="";
-  Object.keys(quizLevels).forEach(level=>{
-    const btn=document.createElement("button");
-    btn.innerText="Level "+level+" "+quizLevels[level].name;
-    btn.className="levelBtn";
-    btn.onclick=()=>startLevel(level);
-    div.appendChild(btn);
-  });
+let html="";
+levels.forEach((lvl,i)=>{
+let locked = i>unlockedLevel;
+html+=`<button class="${locked?'locked':'levelBtn'}"
+${locked?'disabled':''}
+onclick="startLevel(${i})">
+${locked?'🔒 ':''}Level ${i+1} - ${lvl.name}
+</button><br>`;
+});
+document.getElementById("levelSelect").innerHTML=html;
+}
+renderLevels();
+
+function startLevel(i){
+currentLevel=i;
+levelScore=0;
+questionIndex=0;
+document.getElementById("levelSelect").style.display="none";
+document.getElementById("quizBox").style.display="block";
+showQuestion();
 }
 
-function startLevel(level){
-  currentLevel=level;
-  currentQuestion=0;
-  levelScore=0;
-  document.getElementById("levelScreen").classList.remove("active");
-  document.getElementById("quizScreen").classList.add("active");
-  document.getElementById("levelTitle").innerText="Level "+level+" "+quizLevels[level].name;
-  loadQuestion();
-}
-
-function loadQuestion(){
-  const data=quizLevels[currentLevel];
-  const q=data.questions[currentQuestion];
-  document.getElementById("question").innerText=q.q;
-
-  let options=shuffle([...q.o]);
-  const optDiv=document.getElementById("options");
-  optDiv.innerHTML="";
-
-  options.forEach(option=>{
-    const btn=document.createElement("button");
-    btn.className="option";
-    btn.innerText=option;
-    btn.onclick=()=>checkAnswer(option,q.a);
-    optDiv.appendChild(btn);
-  });
-
-  document.getElementById("progressBar").style.width=
-  ((currentQuestion)/data.questions.length)*100+"%";
-
-  document.getElementById("levelScore").innerText="Level Score: "+levelScore;
+function showQuestion(){
+let q = levels[currentLevel].questions[questionIndex];
+let options = shuffle([...q.options]);
+let html=`<h3>${q.question}</h3>`;
+options.forEach(opt=>{
+html+=`<button class="optionBtn"
+onclick="checkAnswer('${opt}','${q.answer}')">
+${opt}</button>`;
+});
+document.getElementById("quizBox").innerHTML=html;
 }
 
 function checkAnswer(selected,correct){
-  const buttons=document.querySelectorAll(".option");
+let msg="";
+if(selected===correct){
+levelScore+=10;
+totalScore+=10;
+msg="✅ সঠিক!";
+}else{
+msg=`❌ ভুল! সঠিক উত্তর: ${correct}`;
+}
+document.getElementById("quizBox").innerHTML+=
+`<p>${msg}</p>
+<button class="nextBtn" onclick="nextQuestion()">Next</button>`;
+}
 
-  buttons.forEach(btn=>{
-    if(btn.innerText===correct){
-      btn.classList.add("correct");
-    }
-    if(btn.innerText===selected && selected!==correct){
-      btn.classList.add("wrong");
-    }
-    btn.disabled=true;
-  });
-
-  if(selected===correct){
-    levelScore+=10;
-    totalScore+=10;
-  }
-
-  setTimeout(()=>{
-    currentQuestion++;
-    if(currentQuestion<quizLevels[currentLevel].questions.length){
-      loadQuestion();
-    }else{
-      finishLevel();
-    }
-  },1000);
+function nextQuestion(){
+questionIndex++;
+if(questionIndex>=levels[currentLevel].questions.length){
+finishLevel();
+}else{
+showQuestion();
+}
 }
 
 function finishLevel(){
-  document.getElementById("quizScreen").classList.remove("active");
-  document.getElementById("resultScreen").classList.add("active");
+document.getElementById("quizBox").style.display="none";
+document.getElementById("resultBox").style.display="block";
 
-  document.getElementById("levelResult").innerText=
-  "Level Score: "+levelScore;
+if(currentLevel===unlockedLevel){
+unlockedLevel++;
+localStorage.setItem("unlock",unlockedLevel);
+}
 
-  document.getElementById("totalResult").innerText=
-  "Total Score: "+totalScore;
+if(currentLevel===levels.length-1){
+showFinal();
+}else{
+document.getElementById("resultBox").innerHTML=
+`<h2>Level Complete!</h2>
+<p>Level Score: ${levelScore}</p>
+<button onclick="location.reload()">Back to Levels</button>`;
+}
+}
 
-  localStorage.setItem("finalScore", totalScore);
+function showFinal(){
+localStorage.setItem("finalScore",totalScore);
+document.getElementById("resultBox").innerHTML=
+`<h2>🎉 সব লেভেল শেষ!</h2>
+<p>মোট স্কোর: ${totalScore}</p>
+<button class="shareBtn" onclick="shareScore()">📤 Share Score</button>`;
 }
 
 function shareScore(){
-  let score = localStorage.getItem("finalScore") || totalScore;
-
-  let text =
-  "🧠 I scored " + score +
-  " points in Minhajul Pro Quiz! 🎉\n\n" +
-  "Can you beat my score? 😎\n" +
-  "Play now and challenge me!";
-
-  if(navigator.share){
-    navigator.share({
-      title:"Minhajul Pro Quiz",
-      text:text
-    });
-  }else{
-    window.open("https://wa.me/?text="+encodeURIComponent(text));
-  }
+let text="আমি Minhajul Pro Quiz এ "+totalScore+
+" পয়েন্ট পেয়েছি! তুমি পারবে আমাকে হারাতে? 😎";
+if(navigator.share){
+navigator.share({title:"Minhajul Pro Quiz",text:text});
+}else{
+window.open("https://wa.me/?text="+encodeURIComponent(text));
+}
 }
 
-function goHome(){
-  document.getElementById("resultScreen").classList.remove("active");
-  document.getElementById("levelScreen").classList.add("active");
+function shuffle(arr){
+return arr.sort(()=>Math.random()-0.5);
 }
 
-renderLevels();
+/* প্রশ্ন সেট */
+
+function getFruit(){
+return [
+{question:"আম কি?",options:["ফল","সবজি","দেশ","পাখি"],answer:"ফল"},
+{question:"কলা কি?",options:["পশু","ফল","দেশ","সবজি"],answer:"ফল"},
+{question:"লিচু কি?",options:["ফল","দেশ","যন্ত্র","পাখি"],answer:"ফল"},
+{question:"কমলা কি?",options:["দেশ","ফল","সবজি","যন্ত্র"],answer:"ফল"},
+{question:"আনারস কি?",options:["ফল","পাখি","দেশ","সবজি"],answer:"ফল"},
+{question:"তরমুজ কি?",options:["দেশ","সবজি","ফল","যন্ত্র"],answer:"ফল"},
+{question:"আমড়া কি?",options:["ফল","দেশ","পাখি","যন্ত্র"],answer:"ফল"}
+];
+}
+
+function getVeg(){
+return [
+{question:"আলু কি?",options:["সবজি","ফল","দেশ","পাখি"],answer:"সবজি"},
+{question:"টমেটো কি?",options:["দেশ","সবজি","ফল","পশু"],answer:"সবজি"},
+{question:"বেগুন কি?",options:["সবজি","দেশ","ফল","যন্ত্র"],answer:"সবজি"},
+{question:"গাজর কি?",options:["দেশ","পশু","সবজি","ফল"],answer:"সবজি"},
+{question:"পেঁয়াজ কি?",options:["সবজি","ফল","দেশ","পাখি"],answer:"সবজি"},
+{question:"কুমড়া কি?",options:["ফল","দেশ","সবজি","যন্ত্র"],answer:"সবজি"},
+{question:"শসা কি?",options:["সবজি","পশু","দেশ","ফল"],answer:"সবজি"}
+];
+}
+
+/* বাকি গুলো একইভাবে */
+
+function getCountry(){return getFruit();}
+function getTools(){return getVeg();}
+function getAnimal(){return getFruit();}
+function getBird(){return getVeg();}
+function getIslamic(){return getFruit();}
+function getMixed(){return getVeg();}
 
 </script>
 </body>
