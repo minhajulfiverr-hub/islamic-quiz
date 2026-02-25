@@ -1,486 +1,145 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Minhajul Pro Quiz</title>
+<!DOCTYPE html>  
+<html lang="bn">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+<title>Minhajul Pro Quiz</title>  
+  
+<style>  
+body{margin:0;font-family:Arial;background:#4b006e;color:white;text-align:center;}  
+h1{margin-top:25px}  
+.card{background:#2a003d;padding:25px;border-radius:25px;width:90%;max-width:420px;margin:20px auto;box-shadow:0 10px 25px rgba(0,0,0,0.4);}  
+button{padding:14px;margin:8px 0;width:85%;border:none;border-radius:30px;font-size:16px;cursor:pointer;}  
+.startBtn,.levelBtn{background:#ffc107;color:black;font-weight:bold;}  
+.locked{background:gray;color:white;}  
+.optionBtn{background:white;color:black;border-radius:15px;}  
+.correct{background:#4caf50 !important;color:white;}  
+.wrong{background:#f44336 !important;color:white;}  
+.nextBtn{background:#4caf50;color:white;}  
+.shareBtn{background:#e91e63;color:white;}  
+.scoreRow{display:flex;justify-content:space-between;margin:8px 0;font-size:18px;}  
+</style>  
+</head>  
+<body>  
+  
+<h1>Minhajul Pro Quiz</h1>  
+  
+<div id="startPage" class="card">  
+<h2>🧠 আপনার জ্ঞান পরীক্ষা করুন</h2>  
+<button class="startBtn" onclick="showLevels()">Start</button>  
+</div>  
+  
+<div id="levelPage" class="card" style="display:none;"></div>  
+<div id="quizPage" class="card" style="display:none;"></div>  
+<div id="resultPage" class="card" style="display:none;"></div>  
+  
+<script>  
+  
+let unlockedLevel=0;  
+let currentLevel=0;  
+let questionIndex=0;  
+let levelScore=0;  
+let totalScore=0;  
+let levelRight=0;  
+let levelWrong=0;  
+let totalRight=0;  
+let totalWrong=0;  
+  
+function shuffle(arr){return arr.sort(()=>Math.random()-0.5);}  
+  
+const levels=[  
 
-<style>
-body{
-margin:0;
-font-family:Arial;
-background:#4b006e;
-color:white;
-text-align:center;
-}
+/* ১ পশু */  
+{ name:"পশু", questions:[  
+{q:"জঙ্গলের রাজা কে?",o:["সিংহ","বাঘ","হাতি","ঘোড়া"],a:"সিংহ"},  
+{q:"সবচেয়ে বড় স্থল প্রাণী?",o:["হাতি","ঘোড়া","গরু","ছাগল"],a:"হাতি"},  
+{q:"ডোরাকাটা প্রাণী?",o:["বাঘ","বিড়াল","কুকুর","গরু"],a:"বাঘ"},  
+{q:"পোষা প্রাণী?",o:["কুকুর","সিংহ","বাঘ","শিয়াল"],a:"কুকুর"},  
+{q:"দুধ দেয়?",o:["গরু","ঘোড়া","সিংহ","বাঘ"],a:"গরু"},  
+{q:"মরুভূমির প্রাণী?",o:["উট","ঘোড়া","গরু","বিড়াল"],a:"উট"},  
+{q:"লম্বা গলা?",o:["জিরাফ","ঘোড়া","গরু","সিংহ"],a:"জিরাফ"}  
+]},  
 
-h1{margin-top:25px}
+/* ২ পাখি */  
+{ name:"পাখি", questions:[  
+{q:"জাতীয় পাখি?",o:["দোয়েল","কাক","কবুতর","ময়ূর"],a:"দোয়েল"},  
+{q:"রঙিন লেজ?",o:["ময়ূর","কাক","চড়ুই","হাঁস"],a:"ময়ূর"},  
+{q:"ডিম পাড়ে?",o:["মুরগি","বিড়াল","কুকুর","গরু"],a:"মুরগি"},  
+{q:"কালো পাখি?",o:["কাক","দোয়েল","হাঁস","টিয়া"],a:"কাক"},  
+{q:"সবুজ পাখি?",o:["টিয়া","কাক","হাঁস","চড়ুই"],a:"টিয়া"},  
+{q:"জলে সাঁতারে?",o:["হাঁস","ময়ূর","টিয়া","কাক"],a:"হাঁস"},  
+{q:"ছোট পাখি?",o:["চড়ুই","ময়ূর","হাঁস","কবুতর"],a:"চড়ুই"}  
+]},  
 
-.card{
-background:#2a003d;
-padding:25px;
-border-radius:25px;
-width:90%;
-max-width:420px;
-margin:20px auto;
-box-shadow:0 10px 25px rgba(0,0,0,0.4);
-}
+/* ৩ ফল */  
+{ name:"ফল", questions:[  
+{q:"হলুদ ফল?",o:["আম","আপেল","কলা","পেয়ারা"],a:"আম"},  
+{q:"লাল ফল?",o:["আপেল","কলা","আম","লেবু"],a:"আপেল"},  
+{q:"লম্বা ফল?",o:["কলা","আপেল","আম","লিচু"],a:"কলা"},  
+{q:"টক ফল?",o:["লেবু","আম","আপেল","কলা"],a:"লেবু"},  
+{q:"গ্রীষ্মকালীন ফল?",o:["লিচু","আপেল","কমলা","আঙুর"],a:"লিচু"},  
+{q:"সবুজ ফল?",o:["পেয়ারা","আম","আপেল","কলা"],a:"পেয়ারা"},  
+{q:"রসালো ফল?",o:["তরমুজ","কলা","আপেল","লেবু"],a:"তরমুজ"}  
+]},  
 
-button{
-padding:14px;
-margin:8px 0;
-width:85%;
-border:none;
-border-radius:30px;
-font-size:16px;
-cursor:pointer;
-}
+/* ৪ দেশ */  
+{ name:"দেশ", questions:[  
+{q:"বাংলাদেশের রাজধানী?",o:["ঢাকা","চট্টগ্রাম","রাজশাহী","খুলনা"],a:"ঢাকা"},  
+{q:"ভারতের রাজধানী?",o:["দিল্লি","মুম্বাই","কলকাতা","চেন্নাই"],a:"দিল্লি"},  
+{q:"পাকিস্তানের রাজধানী?",o:["ইসলামাবাদ","লাহোর","করাচি","কাবুল"],a:"ইসলামাবাদ"},  
+{q:"নেপালের রাজধানী?",o:["কাঠমান্ডু","থিম্পু","কলকাতা","ঢাকা"],a:"কাঠমান্ডু"},  
+{q:"চীনের রাজধানী?",o:["বেইজিং","সাংহাই","টোকিও","সিউল"],a:"বেইজিং"},  
+{q:"জাপানের রাজধানী?",o:["টোকিও","সিউল","ব্যাংকক","মানিলা"],a:"টোকিও"},  
+{q:"যুক্তরাষ্ট্রের রাজধানী?",o:["ওয়াশিংটন","নিউইয়র্ক","লসএঞ্জেলেস","শিকাগো"],a:"ওয়াশিংটন"}  
+]},  
 
-.startBtn,.levelBtn{
-background:#ffc107;
-color:black;
-font-weight:bold;
-}
+/* ৫ রং */  
+{ name:"রং", questions:[  
+{q:"আকাশের রং?",o:["নীল","লাল","সবুজ","হলুদ"],a:"নীল"},  
+{q:"পাতার রং?",o:["সবুজ","নীল","লাল","কালো"],a:"সবুজ"},  
+{q:"রক্তের রং?",o:["লাল","নীল","সবুজ","সাদা"],a:"লাল"},  
+{q:"দুধের রং?",o:["সাদা","কালো","নীল","লাল"],a:"সাদা"},  
+{q:"সূর্যের আলো?",o:["হলুদ","নীল","কালো","সবুজ"],a:"হলুদ"},  
+{q:"কয়লার রং?",o:["কালো","সাদা","লাল","নীল"],a:"কালো"},  
+{q:"ঘাসের রং?",o:["সবুজ","লাল","কালো","নীল"],a:"সবুজ"}  
+]},  
 
-.locked{background:gray;color:white;}
+/* ৬ গণিত */  
+{ name:"গণিত", questions:[  
+{q:"৫+৫=?",o:["১০","৮","১২","১৫"],a:"১০"},  
+{q:"১০-২=?",o:["৮","৬","৭","৯"],a:"৮"},  
+{q:"৩×৩=?",o:["৯","৬","১২","৮"],a:"৯"},  
+{q:"১২÷৪=?",o:["৩","৪","২","৬"],a:"৩"},  
+{q:"৭+৩=?",o:["১০","৯","৮","১১"],a:"১০"},  
+{q:"১৫-৫=?",o:["১০","৮","১২","৬"],a:"১০"},  
+{q:"২×৫=?",o:["১০","৮","১২","৬"],a:"১০"}  
+]},  
 
-.optionBtn{background:white;color:black;border-radius:15px;}
+/* ৭ সাধারণ জ্ঞান */  
+{ name:"সাধারণ জ্ঞান", questions:[  
+{q:"বাংলাদেশ স্বাধীন হয়?",o:["১৯৭১","১৯৬৫","১৯৫২","১৯৮১"],a:"১৯৭১"},  
+{q:"ভাষা আন্দোলন?",o:["১৯৫২","১৯৭১","১৯৬৯","১৯৪৭"],a:"১৯৫২"},  
+{q:"জাতীয় ফুল?",o:["শাপলা","গোলাপ","জবা","সূর্যমুখী"],a:"শাপলা"},  
+{q:"জাতীয় ফল?",o:["কাঁঠাল","আম","লিচু","কলা"],a:"কাঁঠাল"},  
+{q:"জাতীয় প্রাণী?",o:["বাঘ","সিংহ","হাতি","ঘোড়া"],a:"বাঘ"},  
+{q:"জাতীয় মাছ?",o:["ইলিশ","রুই","কাতলা","চিংড়ি"],a:"ইলিশ"},  
+{q:"জাতীয় কবি?",o:["কাজী নজরুল ইসলাম","রবীন্দ্রনাথ","জসীমউদ্দিন","সুকান্ত"],a:"কাজী নজরুল ইসলাম"}  
+]}  
 
-.correct{background:#4caf50 !important;color:white;}
-.wrong{background:#f44336 !important;color:white;}
+];  
 
-.nextBtn{background:#4caf50;color:white;}
-.shareBtn{background:#e91e63;color:white;}
+/* বাকি JS আগের মতোই থাকবে */  
 
-.scoreRow{
-display:flex;
-justify-content:space-between;
-margin:8px 0;
-font-size:18px;
-}
-</style>
-</head>
-<body>
-
-<h1>Minhajul Pro Quiz</h1>
-
-<div id="startPage" class="card">
-<h2>🧠 আপনার জ্ঞান পরীক্ষা করুন</h2>
-<button class="startBtn" onclick="showLevels()">Start</button>
-</div>
-
-<div id="levelPage" class="card" style="display:none;"></div>
-<div id="quizPage" class="card" style="display:none;"></div>
-<div id="resultPage" class="card" style="display:none;"></div>
-
-<script>
-
-let unlockedLevel=0;
-let currentLevel=0;
-let questionIndex=0;
-let levelScore=0;
-let totalScore=0;
-let levelRight=0;
-let levelWrong=0;
-let totalRight=0;
-let totalWrong=0;
-
-function shuffle(arr){
-return arr.sort(()=>Math.random()-0.5);
-}
-
-const levels=[
-{ name:"পশু", questions:[
-{q:"জঙ্গলের রাজা কে?",o:["সিংহ","বাঘ","হাতি","ঘোড়া"],a:"সিংহ"},
-{q:"সবচেয়ে বড় স্থল প্রাণী?",o:["হাতি","ঘোড়া","গরু","ছাগল"],a:"হাতি"},
-{q:"ডোরাকাটা প্রাণী?",o:["বাঘ","বিড়াল","কুকুর","গরু"],a:"বাঘ"},
-{q:"পোষা প্রাণী?",o:["কুকুর","সিংহ","বাঘ","শিয়াল"],a:"কুকুর"},
-{q:"দুধ দেয়?",o:["গরু","ঘোড়া","সিংহ","বাঘ"],a:"গরু"},
-{q:"মরুভূমির প্রাণী?",o:["উট","ঘোড়া","গরু","বিড়াল"],a:"উট"},
-{q:"লম্বা গলা?",o:["জিরাফ","ঘোড়া","গরু","সিংহ"],a:"জিরাফ"}
-]},
-{ name:"পাখি", questions:[
-{q:"জাতীয় পাখি?",o:["দোয়েল","কাক","কবুতর","ময়ূর"],a:"দোয়েল"},
-{q:"রঙিন লেজ?",o:["ময়ূর","কাক","চড়ুই","হাঁস"],a:"ময়ূর"},
-{q:"ডিম পাড়ে?",o:["মুরগি","বিড়াল","কুকুর","গরু"],a:"মুরগি"},
-{q:"কালো পাখি?",o:["কাক","দোয়েল","হাঁস","টিয়া"],a:"কাক"},
-{q:"সবুজ পাখি?",o:["টিয়া","কাক","হাঁস","চড়ুই"],a:"টিয়া"},
-{q:"জলে সাঁতারে?",o:["হাঁস","ময়ূর","টিয়া","কাক"],a:"হাঁস"},
-{q:"ছোট পাখি?",o:["চড়ুই","ময়ূর","হাঁস","কবুতর"],a:"চড়ুই"}
-]},
-{ name:"ফল", questions:[
-{q:"হলুদ ফল?",o:["আম","আপেল","কলা","পেয়ারা"],a:"আম"},
-{q:"লাল ফল?",o:["আপেল","কলা","আম","লেবু"],a:"আপেল"},
-{q:"লম্বা ফল?",o:["কলা","আপেল","আম","লিচু"],a:"কলা"},
-{q:"টক ফল?",o:["লেবু","আম","আপেল","কলা"],a:"লেবু"},
-{q:"গ্রীষ্মকালীন ফল?",o:["লিচু","আপেল","কমলা","আঙুর"],a:"লিচু"},
-{q:"সবুজ ফল?",o:["পেয়ারা","আম","আপেল","কলা"],a:"পেয়ারা"},
-{q:"রসালো ফল?",o:["তরমুজ","কলা","আপেল","লেবু"],a:"তরমুজ"}
-]},
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Minhajul Pro Quiz</title>
-
-<style>
-body{
-margin:0;
-font-family:Arial, sans-serif;
-background:#4b006e;
-color:white;
-text-align:center;
-}
-
-h1{
-margin-top:30px;
-font-size:28px;
-}
-
-.card{
-background:#2a003d;
-padding:25px;
-border-radius:25px;
-width:90%;
-max-width:420px;
-margin:20px auto;
-box-shadow:0 10px 25px rgba(0,0,0,0.4);
-}
-
-button{
-padding:14px;
-margin:8px 0;
-width:85%;
-border:none;
-border-radius:30px;
-font-size:16px;
-cursor:pointer;
-}
-
-.startBtn, .levelBtn{
-background:#ffc107;
-color:black;
-font-weight:bold;
-}
-
-.locked{
-background:gray;
-color:white;
-}
-
-.optionBtn{
-background:white;
-color:black;
-border-radius:15px;
-}
-
-.correct{
-background:#4caf50 !important;
-color:white;
-}
-
-.wrong{
-background:#f44336 !important;
-color:white;
-}
-
-.nextBtn{
-background:#4caf50;
-color:white;
-}
-
-.shareBtn{
-background:#e91e63;
-color:white;
-}
-</style>
-</head>
-<body>
-
-<h1>Minhajul Pro Quiz</h1>
-
-<!-- Start Page -->
-<div id="startPage" class="card">
-<h2>🧠 আপনার জ্ঞান পরীক্ষা করুন</h2>
-<button class="startBtn" onclick="showLevels()">Start</button>
-</div>
-
-<!-- Level Page -->
-<div id="levelPage" class="card" style="display:none;"></div>
-
-<!-- Quiz Page -->
-<div id="quizPage" class="card" style="display:none;"></div>
-
-<!-- Result Page -->
-<div id="resultPage" class="card" style="display:none;"></div>
-
-<script>
-
-let unlockedLevel=0;
-let currentLevel=0;
-let questionIndex=0;
-let levelScore=0;
-let totalScore=0;
-let levelScores=[];
-
-function shuffle(arr){
-return arr.sort(()=>Math.random()-0.5);
-}
-
-const levels=[
-{ name:"পশু", questions:[
-{q:"জঙ্গলের রাজা কে?",o:["সিংহ","বাঘ","হাতি","ঘোড়া"],a:"সিংহ"},
-{q:"সবচেয়ে বড় স্থল প্রাণী?",o:["হাতি","ঘোড়া","গরু","ছাগল"],a:"হাতি"},
-{q:"ডোরাকাটা প্রাণী?",o:["বাঘ","বিড়াল","কুকুর","গরু"],a:"বাঘ"},
-{q:"পোষা প্রাণী?",o:["কুকুর","সিংহ","বাঘ","শিয়াল"],a:"কুকুর"},
-{q:"দুধ দেয়?",o:["গরু","ঘোড়া","সিংহ","বাঘ"],a:"গরু"},
-{q:"মরুভূমির প্রাণী?",o:["উট","ঘোড়া","গরু","বিড়াল"],a:"উট"},
-{q:"লম্বা গলা?",o:["জিরাফ","ঘোড়া","গরু","সিংহ"],a:"জিরাফ"}
-]},
-{ name:"পাখি", questions:[
-{q:"জাতীয় পাখি?",o:["দোয়েল","কাক","কবুতর","ময়ূর"],a:"দোয়েল"},
-{q:"রঙিন লেজ?",o:["ময়ূর","কাক","চড়ুই","হাঁস"],a:"ময়ূর"},
-{q:"ডিম পাড়ে?",o:["মুরগি","বিড়াল","কুকুর","গরু"],a:"মুরগি"},
-{q:"কালো পাখি?",o:["কাক","দোয়েল","হাঁস","টিয়া"],a:"কাক"},
-{q:"সবুজ পাখি?",o:["টিয়া","কাক","হাঁস","চড়ুই"],a:"টিয়া"},
-{q:"জলে সাঁতারে?",o:["হাঁস","ময়ূর","টিয়া","কাক"],a:"হাঁস"},
-{q:"ছোট পাখি?",o:["চড়ুই","ময়ূর","হাঁস","কবুতর"],a:"চড়ুই"}
-]},
-{ name:"ফল", questions:[
-{q:"হলুদ ফল?",o:["আম","আপেল","কলা","পেয়ারা"],a:"আম"},
-{q:"লাল ফল?",o:["আপেল","কলা","আম","লেবু"],a:"আপেল"},
-{q:"লম্বা ফল?",o:["কলা","আপেল","আম","লিচু"],a:"কলা"},
-{q:"টক ফল?",o:["লেবু","আম","আপেল","কলা"],a:"লেবু"},
-{q:"গ্রীষ্মকালীন ফল?",o:["লিচু","আপেল","কমলা","আঙুর"],a:"লিচু"},
-{q:"সবুজ ফল?",o:["পেয়ারা","আম","আপেল","কলা"],a:"পেয়ারা"},
-{q:"রসালো ফল?",o:["তরমুজ","কলা","আপেল","লেবু"],a:"তরমুজ"}
-]},
-{ name:"সবজি", questions:[
-{q:"লাল সবজি?",o:["টমেটো","বেগুন","লাউ","শসা"],a:"টমেটো"},
-{q:"বেগুনি রঙ?",o:["বেগুন","লাউ","শসা","টমেটো"],a:"বেগুন"},
-{q:"লম্বা সবজি?",o:["লাউ","টমেটো","বেগুন","গাজর"],a:"লাউ"},
-{q:"মাটির নিচে জন্মায়?",o:["গাজর","টমেটো","লাউ","বেগুন"],a:"গাজর"},
-{q:"সবুজ সবজি?",o:["শসা","টমেটো","গাজর","বেগুন"],a:"শসা"},
-{q:"পাতাযুক্ত?",o:["পালং","টমেটো","লাউ","বেগুন"],a:"পালং"},
-{q:"ঝাল সবজি?",o:["মরিচ","লাউ","বেগুন","গাজর"],a:"মরিচ"}
-]},
-{ name:"মাছ", questions:[
-{q:"জাতীয় মাছ?",o:["ইলিশ","রুই","কাতলা","পাবদা"],a:"ইলিশ"},
-{q:"পুকুরের মাছ?",o:["রুই","ইলিশ","চিংড়ি","সামুদ্রিক মাছ"],a:"রুই"},
-{q:"সমুদ্রের মাছ?",o:["টুনা","রুই","কাতলা","পুঁটি"],a:"টুনা"},
-{q:"ছোট মাছ?",o:["পুঁটি","রুই","কাতলা","ইলিশ"],a:"পুঁটি"},
-{q:"চিংড়ি কি?",o:["মাছ","পাখি","পশু","ফল"],a:"মাছ"},
-{q:"বড় মাছ?",o:["কাতলা","পুঁটি","চিংড়ি","ট্যাংরা"],a:"কাতলা"},
-{q:"সুস্বাদু মাছ?",o:["ইলিশ","পুঁটি","ট্যাংরা","চিংড়ি"],a:"ইলিশ"}
-]},
-{ name:"যন্ত্রপাতি", questions:[
-{q:"লেখার জন্য?",o:["কলম","চামচ","চাকা","হাতুড়ি"],a:"কলম"},
-{q:"কাঠ কাটতে?",o:["করাত","কলম","চামচ","ঘড়ি"],a:"করাত"},
-{q:"সময় দেখায়?",o:["ঘড়ি","কলম","করাত","চাকা"],a:"ঘড়ি"},
-{q:"গাড়িতে লাগে?",o:["চাকা","কলম","ঘড়ি","করাত"],a:"চাকা"},
-{q:"পেরেক পেটাতে?",o:["হাতুড়ি","কলম","ঘড়ি","করাত"],a:"হাতুড়ি"},
-{q:"খাওয়ার জন্য?",o:["চামচ","কলম","চাকা","ঘড়ি"],a:"চামচ"},
-{q:"লিখতে লাগে?",o:["কলম","করাত","ঘড়ি","চাকা"],a:"কলম"}
-]},
-{ name:"দেশ", questions:[
-{q:"বাংলাদেশের রাজধানী?",o:["ঢাকা","দিল্লি","লন্ডন","টোকিও"],a:"ঢাকা"},
-{q:"ভারতের রাজধানী?",o:["দিল্লি","ঢাকা","রোম","প্যারিস"],a:"দিল্লি"},
-{q:"জাপানের রাজধানী?",o:["টোকিও","ঢাকা","দিল্লি","রোম"],a:"টোকিও"},
-{q:"ফ্রান্সের রাজধানী?",o:["প্যারিস","লন্ডন","রোম","বার্লিন"],a:"প্যারিস"},
-{q:"ইতালির রাজধানী?",o:["রোম","প্যারিস","ঢাকা","দিল্লি"],a:"রোম"},
-{q:"জার্মানির রাজধানী?",o:["বার্লিন","রোম","প্যারিস","মাদ্রিদ"],a:"বার্লিন"},
-{q:"ইংল্যান্ডের রাজধানী?",o:["লন্ডন","রোম","ঢাকা","দিল্লি"],a:"লন্ডন"}
-]}
-];
-
-function showLevels(){
-document.getElementById("startPage").style.display="none";
-let box=document.getElementById("levelPage");
-box.style.display="block";
-box.innerHTML="<h2>লেভেল নির্বাচন করুন</h2>";
-levels.forEach((lvl,i)=>{
-let btn=document.createElement("button");
-btn.innerText="লেভেল "+(i+1)+" - "+lvl.name;
-btn.className="levelBtn";
-if(i>unlockedLevel){btn.classList.add("locked");btn.disabled=true;}
-btn.onclick=()=>startLevel(i);
-box.appendChild(btn);
-});
-}
-
-function startLevel(i){
-currentLevel=i;
-questionIndex=0;
-levelScore=0;
-document.getElementById("levelPage").style.display="none";
-document.getElementById("quizPage").style.display="block";
-showQuestion();
-}
-
-function showQuestion(){
-let q=levels[currentLevel].questions[questionIndex];
-let box=document.getElementById("quizPage");
-box.innerHTML="<h3>"+q.q+"</h3>";
-shuffle([...q.o]).forEach(opt=>{
-let btn=document.createElement("button");
-btn.innerText=opt;
-btn.className="optionBtn";
-btn.onclick=()=>checkAnswer(btn,opt,q.a);
-box.appendChild(btn);
-});
-}
-
-function checkAnswer(btn,selected,correct){
-let buttons=document.querySelectorAll(".optionBtn");
-buttons.forEach(b=>{
-b.disabled=true;
-if(b.innerText===correct) b.classList.add("correct");
-if(b.innerText===selected && selected!==correct) b.classList.add("wrong");
-});
-if(selected===correct){levelScore+=10;totalScore+=10;}
-setTimeout(nextQuestion,1000);
-}
-
-function nextQuestion(){
-questionIndex++;
-if(questionIndex<7){showQuestion();}
-else{
-levelScores[currentLevel]=levelScore;
-unlockedLevel++;
-if(currentLevel<levels.length-1){
-alert("লেভেল সম্পন্ন! স্কোর: "+levelScore);
-document.getElementById("quizPage").style.display="none";
-showLevels();
-}else{showFinal();}
-}
-}
-
-function showFinal(){
-document.getElementById("quizPage").style.display="none";
-let box=document.getElementById("resultPage");
-box.style.display="block";
-box.innerHTML="<h2>🏆 চূড়ান্ত ফলাফল</h2>"+
-"<p>মোট স্কোর: "+totalScore+"</p>"+
-"<button class='shareBtn' onclick='shareScore()'>শেয়ার করুন</button>"+
-"<button class='nextBtn' onclick='location.reload()'>আবার খেলুন</button>";
-}
-
-function shareScore(){
-let text="আমি Minhajul Pro Quiz এ "+totalScore+" পেয়েছি! তুমি পারো?";
-let url=encodeURIComponent(location.href);
-window.open("https://www.facebook.com/sharer/sharer.php?u="+url+"&quote="+text);
-}
-
-</script>
-</body>
-</html>
-
-function showLevels(){
-document.getElementById("startPage").style.display="none";
-let box=document.getElementById("levelPage");
-box.style.display="block";
-box.innerHTML="<h2>লেভেল নির্বাচন করুন</h2>";
-levels.forEach((lvl,i)=>{
-let btn=document.createElement("button");
-btn.innerText="লেভেল "+(i+1)+" - "+lvl.name;
-btn.className="levelBtn";
-if(i>unlockedLevel){btn.classList.add("locked");btn.disabled=true;}
-btn.onclick=()=>startLevel(i);
-box.appendChild(btn);
-});
-}
-
-function startLevel(i){
-currentLevel=i;
-questionIndex=0;
-levelScore=0;
-levelRight=0;
-levelWrong=0;
-document.getElementById("levelPage").style.display="none";
-document.getElementById("quizPage").style.display="block";
-showQuestion();
-}
-
-function showQuestion(){
-let q=levels[currentLevel].questions[questionIndex];
-let box=document.getElementById("quizPage");
-box.innerHTML="<h3>"+q.q+"</h3>";
-shuffle([...q.o]).forEach(opt=>{
-let btn=document.createElement("button");
-btn.innerText=opt;
-btn.className="optionBtn";
-btn.onclick=()=>checkAnswer(btn,opt,q.a);
-box.appendChild(btn);
-});
-}
-
-function checkAnswer(btn,selected,correct){
-let buttons=document.querySelectorAll(".optionBtn");
-buttons.forEach(b=>{
-b.disabled=true;
-if(b.innerText===correct) b.classList.add("correct");
-if(b.innerText===selected && selected!==correct) b.classList.add("wrong");
-});
-if(selected===correct){
-levelScore+=10;
-totalScore+=10;
-levelRight++;
-totalRight++;
-}else{
-levelWrong++;
-totalWrong++;
-}
-setTimeout(nextQuestion,1000);
-}
-
-function nextQuestion(){
-questionIndex++;
-if(questionIndex<7){showQuestion();}
-else{showLevelResult();}
-}
-
-function showLevelResult(){
-document.getElementById("quizPage").style.display="none";
-let box=document.getElementById("resultPage");
-box.style.display="block";
-
-box.innerHTML=
-"<h2>🏆 লেভেল সম্পন্ন</h2>"+
-"<div class='scoreRow'><span>মোট প্রশ্ন</span><span>7</span></div>"+
-"<div class='scoreRow'><span>সঠিক উত্তর</span><span>"+levelRight+"</span></div>"+
-"<div class='scoreRow'><span>ভুল উত্তর</span><span>"+levelWrong+"</span></div>"+
-"<div class='scoreRow'><span>লেভেল স্কোর</span><span>"+levelScore+"</span></div>"+
-(currentLevel<levels.length-1?
-"<button class='nextBtn' onclick='goNextLevel()'>পরের লেভেল</button>"
-:
-"<button class='shareBtn' onclick='showFinal()'>চূড়ান্ত ফলাফল</button>"
-);
-}
-
-function goNextLevel(){
-unlockedLevel++;
-document.getElementById("resultPage").style.display="none";
-showLevels();
-}
-
-function showFinal(){
-let box=document.getElementById("resultPage");
-box.innerHTML=
-"<h2>🏆 চূড়ান্ত ফলাফল</h2>"+
-"<div class='scoreRow'><span>মোট সঠিক</span><span>"+totalRight+"</span></div>"+
-"<div class='scoreRow'><span>মোট ভুল</span><span>"+totalWrong+"</span></div>"+
-"<div class='scoreRow'><span>মোট স্কোর</span><span>"+totalScore+"</span></div>"+
-"<button class='shareBtn' onclick='shareScore()'>শেয়ার করুন</button>"+
-"<button class='nextBtn' onclick='location.reload()'>আবার খেলুন</button>";
-}
-
-function shareScore(){
-let text="আমি Minhajul Pro Quiz এ "+totalScore+" পেয়েছি!";
-let url=encodeURIComponent(location.href);
-window.open("https://www.facebook.com/sharer/sharer.php?u="+url+"&quote="+text);
-}
-
-</script>
-</body>
+function showLevels(){document.getElementById("startPage").style.display="none";let box=document.getElementById("levelPage");box.style.display="block";box.innerHTML="<h2>লেভেল নির্বাচন করুন</h2>";levels.forEach((lvl,i)=>{let btn=document.createElement("button");btn.innerText="লেভেল "+(i+1)+" - "+lvl.name;btn.className="levelBtn";if(i>unlockedLevel){btn.classList.add("locked");btn.disabled=true;}btn.onclick=()=>startLevel(i);box.appendChild(btn);});}  
+function startLevel(i){currentLevel=i;questionIndex=0;levelScore=0;levelRight=0;levelWrong=0;document.getElementById("levelPage").style.display="none";document.getElementById("quizPage").style.display="block";showQuestion();}  
+function showQuestion(){let q=levels[currentLevel].questions[questionIndex];let box=document.getElementById("quizPage");box.innerHTML="<h3>"+q.q+"</h3>";shuffle([...q.o]).forEach(opt=>{let btn=document.createElement("button");btn.innerText=opt;btn.className="optionBtn";btn.onclick=()=>checkAnswer(btn,opt,q.a);box.appendChild(btn);});}  
+function checkAnswer(btn,selected,correct){let buttons=document.querySelectorAll(".optionBtn");buttons.forEach(b=>{b.disabled=true;if(b.innerText===correct)b.classList.add("correct");if(b.innerText===selected&&selected!==correct)b.classList.add("wrong");});if(selected===correct){levelScore+=10;totalScore+=10;levelRight++;totalRight++;}else{levelWrong++;totalWrong++;}setTimeout(nextQuestion,1000);}  
+function nextQuestion(){questionIndex++;if(questionIndex<7){showQuestion();}else{showLevelResult();}}  
+function showLevelResult(){document.getElementById("quizPage").style.display="none";let box=document.getElementById("resultPage");box.style.display="block";box.innerHTML="<h2>🏆 লেভেল সম্পন্ন</h2>"+"<div class='scoreRow'><span>মোট প্রশ্ন</span><span>7</span></div>"+"<div class='scoreRow'><span>সঠিক উত্তর</span><span>"+levelRight+"</span></div>"+"<div class='scoreRow'><span>ভুল উত্তর</span><span>"+levelWrong+"</span></div>"+"<div class='scoreRow'><span>লেভেল স্কোর</span><span>"+levelScore+"</span></div>"+(currentLevel<levels.length-1?"<button class='nextBtn' onclick='goNextLevel()'>পরের লেভেল</button>":"<button class='shareBtn' onclick='showFinal()'>চূড়ান্ত ফলাফল</button>");}  
+function goNextLevel(){unlockedLevel++;document.getElementById("resultPage").style.display="none";showLevels();}  
+function showFinal(){let box=document.getElementById("resultPage");box.innerHTML="<h2>🏆 চূড়ান্ত ফলাফল</h2>"+"<div class='scoreRow'><span>মোট সঠিক</span><span>"+totalRight+"</span></div>"+"<div class='scoreRow'><span>মোট ভুল</span><span>"+totalWrong+"</span></div>"+"<div class='scoreRow'><span>মোট স্কোর</span><span>"+totalScore+"</span></div>"+"<button class='shareBtn' onclick='shareScore()'>শেয়ার করুন</button>"+"<button class='nextBtn' onclick='location.reload()'>আবার খেলুন</button>";}  
+function shareScore(){let text="আমি Minhajul Pro Quiz এ "+totalScore+" পেয়েছি!";let url=encodeURIComponent(location.href);window.open("https://www.facebook.com/sharer/sharer.php?u="+url+"&quote="+text);}  
+  
+</script>  
+</body>  
 </html>
