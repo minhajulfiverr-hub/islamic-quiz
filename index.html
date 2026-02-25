@@ -3,62 +3,82 @@
 <head>
 <meta charset="UTF-8">
 <title>Minhajul Pro Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{
-font-family:Arial;
-text-align:center;
-background:linear-gradient(45deg,#2196f3,#00bcd4);
+margin:0;
+font-family:Arial, sans-serif;
+background:#4b006e;
 color:white;
-padding:20px;
+text-align:center;
 }
+
+h1{
+margin-top:25px;
+font-size:30px;
+}
+
+.card{
+background:#2a003d;
+padding:25px;
+border-radius:25px;
+width:90%;
+max-width:420px;
+margin:20px auto;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+
 button{
-padding:10px 20px;
-margin:6px;
+padding:14px;
 border:none;
-border-radius:8px;
+border-radius:30px;
+font-size:17px;
 cursor:pointer;
-font-size:16px;
+margin:8px 0;
+width:85%;
 }
-.levelBtn{background:#ff9800;color:white;}
-.locked{background:gray;}
-.optionBtn{background:white;color:black;display:block;width:80%;margin:8px auto;}
+
+.levelBtn{background:#ffc107;color:black;font-weight:bold;}
+.locked{background:gray;color:white;}
+.optionBtn{background:white;color:black;border-radius:15px;}
 .nextBtn{background:#4caf50;color:white;}
 .shareBtn{background:#e91e63;color:white;}
+
+.trophy{font-size:60px;margin-bottom:10px;}
+.hidden{display:none;}
 </style>
 </head>
 <body>
 
 <h1>Minhajul Pro Quiz</h1>
 
-<div id="levelSelect"></div>
-<div id="quizBox" style="display:none;"></div>
-<div id="resultBox" style="display:none;"></div>
+<div id="levelSelect" class="card"></div>
+<div id="quizBox" class="card hidden"></div>
+<div id="resultBox" class="card hidden"></div>
 
 <script>
 
-const levels = [
-{ name:"ফল", questions:getFruit() },
-{ name:"সবজি", questions:getVeg() },
-{ name:"দেশ", questions:getCountry() },
-{ name:"যন্ত্রপাতি", questions:getTools() },
-{ name:"পশু", questions:getAnimal() },
-{ name:"পাখি", questions:getBird() },
-{ name:"ইসলামিক", questions:getIslamic() },
-{ name:"মিশ্র", questions:getMixed() }
+const levels=[
+{name:"ফল",questions:getFruit()},
+{name:"সবজি",questions:getVeg()},
+{name:"দেশ",questions:getCountry()},
+{name:"পশু",questions:getAnimal()},
+{name:"পাখি",questions:getBird()}
 ];
 
-let unlockedLevel = localStorage.getItem("unlock")
-? parseInt(localStorage.getItem("unlock")) : 0;
-
-let totalScore = 0;
-let levelScore = 0;
-let currentLevel = 0;
-let questionIndex = 0;
+let unlocked=localStorage.getItem("unlock")?parseInt(localStorage.getItem("unlock")):0;
+let totalScore=0;
+let levelScore=0;
+let right=0;
+let wrong=0;
+let currentLevel=0;
+let index=0;
 
 function renderLevels(){
 let html="";
 levels.forEach((lvl,i)=>{
-let locked = i>unlockedLevel;
+let locked=i>unlocked;
 html+=`<button class="${locked?'locked':'levelBtn'}"
 ${locked?'disabled':''}
 onclick="startLevel(${i})">
@@ -72,15 +92,15 @@ renderLevels();
 function startLevel(i){
 currentLevel=i;
 levelScore=0;
-questionIndex=0;
-document.getElementById("levelSelect").style.display="none";
-document.getElementById("quizBox").style.display="block";
+index=0;
+document.getElementById("levelSelect").classList.add("hidden");
+document.getElementById("quizBox").classList.remove("hidden");
 showQuestion();
 }
 
 function showQuestion(){
-let q = levels[currentLevel].questions[questionIndex];
-let options = shuffle([...q.options]);
+let q=levels[currentLevel].questions[index];
+let options=[...q.options].sort(()=>Math.random()-0.5);
 let html=`<h3>${q.question}</h3>`;
 options.forEach(opt=>{
 html+=`<button class="optionBtn"
@@ -91,53 +111,51 @@ document.getElementById("quizBox").innerHTML=html;
 }
 
 function checkAnswer(selected,correct){
-let msg="";
 if(selected===correct){
 levelScore+=10;
 totalScore+=10;
-msg="✅ সঠিক!";
+right++;
 }else{
-msg=`❌ ভুল! সঠিক উত্তর: ${correct}`;
+wrong++;
 }
-document.getElementById("quizBox").innerHTML+=
-`<p>${msg}</p>
-<button class="nextBtn" onclick="nextQuestion()">Next</button>`;
-}
-
-function nextQuestion(){
-questionIndex++;
-if(questionIndex>=levels[currentLevel].questions.length){
-finishLevel();
-}else{
+index++;
+if(index<levels[currentLevel].questions.length){
 showQuestion();
+}else{
+finishLevel();
 }
 }
 
 function finishLevel(){
-document.getElementById("quizBox").style.display="none";
-document.getElementById("resultBox").style.display="block";
+document.getElementById("quizBox").classList.add("hidden");
 
-if(currentLevel===unlockedLevel){
-unlockedLevel++;
-localStorage.setItem("unlock",unlockedLevel);
+if(currentLevel===unlocked){
+unlocked++;
+localStorage.setItem("unlock",unlocked);
 }
 
 if(currentLevel===levels.length-1){
 showFinal();
 }else{
+document.getElementById("resultBox").classList.remove("hidden");
 document.getElementById("resultBox").innerHTML=
 `<h2>Level Complete!</h2>
 <p>Level Score: ${levelScore}</p>
-<button onclick="location.reload()">Back to Levels</button>`;
+<button class="nextBtn" onclick="location.reload()">Back to Levels</button>`;
 }
 }
 
 function showFinal(){
-localStorage.setItem("finalScore",totalScore);
+document.getElementById("resultBox").classList.remove("hidden");
 document.getElementById("resultBox").innerHTML=
-`<h2>🎉 সব লেভেল শেষ!</h2>
-<p>মোট স্কোর: ${totalScore}</p>
-<button class="shareBtn" onclick="shareScore()">📤 Share Score</button>`;
+`<div class="trophy">🏆</div>
+<h2>Your Score</h2>
+<p>Total Question: ${levels.length*7}</p>
+<p>Right Answer: ${right}</p>
+<p>Wrong Answer: ${wrong}</p>
+<p><strong>Total Score: ${totalScore}</strong></p>
+<button class="shareBtn" onclick="shareScore()">📤 Share Score</button>
+<button class="nextBtn" onclick="location.reload()">Play Again</button>`;
 }
 
 function shareScore(){
@@ -150,14 +168,9 @@ window.open("https://wa.me/?text="+encodeURIComponent(text));
 }
 }
 
-function shuffle(arr){
-return arr.sort(()=>Math.random()-0.5);
-}
+/* QUESTION SET (৭টা করে) */
 
-/* প্রশ্ন সেট */
-
-function getFruit(){
-return [
+function getFruit(){return[
 {question:"আম কি?",options:["ফল","সবজি","দেশ","পাখি"],answer:"ফল"},
 {question:"কলা কি?",options:["পশু","ফল","দেশ","সবজি"],answer:"ফল"},
 {question:"লিচু কি?",options:["ফল","দেশ","যন্ত্র","পাখি"],answer:"ফল"},
@@ -165,29 +178,21 @@ return [
 {question:"আনারস কি?",options:["ফল","পাখি","দেশ","সবজি"],answer:"ফল"},
 {question:"তরমুজ কি?",options:["দেশ","সবজি","ফল","যন্ত্র"],answer:"ফল"},
 {question:"আমড়া কি?",options:["ফল","দেশ","পাখি","যন্ত্র"],answer:"ফল"}
-];
-}
+];}
 
-function getVeg(){
-return [
+function getVeg(){return[
 {question:"আলু কি?",options:["সবজি","ফল","দেশ","পাখি"],answer:"সবজি"},
-{question:"টমেটো কি?",options:["দেশ","সবজি","ফল","পশু"],answer:"সবজি"},
 {question:"বেগুন কি?",options:["সবজি","দেশ","ফল","যন্ত্র"],answer:"সবজি"},
 {question:"গাজর কি?",options:["দেশ","পশু","সবজি","ফল"],answer:"সবজি"},
 {question:"পেঁয়াজ কি?",options:["সবজি","ফল","দেশ","পাখি"],answer:"সবজি"},
 {question:"কুমড়া কি?",options:["ফল","দেশ","সবজি","যন্ত্র"],answer:"সবজি"},
-{question:"শসা কি?",options:["সবজি","পশু","দেশ","ফল"],answer:"সবজি"}
-];
-}
-
-/* বাকি গুলো একইভাবে */
+{question:"শসা কি?",options:["সবজি","পশু","দেশ","ফল"],answer:"সবজি"},
+{question:"টমেটো কি?",options:["দেশ","সবজি","ফল","পশু"],answer:"সবজি"}
+];}
 
 function getCountry(){return getFruit();}
-function getTools(){return getVeg();}
-function getAnimal(){return getFruit();}
-function getBird(){return getVeg();}
-function getIslamic(){return getFruit();}
-function getMixed(){return getVeg();}
+function getAnimal(){return getVeg();}
+function getBird(){return getFruit();}
 
 </script>
 </body>
