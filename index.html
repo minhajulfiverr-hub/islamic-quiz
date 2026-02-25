@@ -2,24 +2,19 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bangla Quiz</title>
+<title>Minhajul Pro Quiz</title>
+
 <style>
 body{
   margin:0;
-  font-family:Arial, sans-serif;
+  font-family:Arial;
   background:#2b0040;
   color:white;
   text-align:center;
 }
 
-.screen{
-  display:none;
-  padding:20px;
-}
-
-.active{
-  display:block;
-}
+.screen{ display:none; padding:20px; }
+.active{ display:block; }
 
 .card{
   background:#1a0026;
@@ -38,170 +33,173 @@ button{
   cursor:pointer;
 }
 
-.startBtn{
-  background:#ffc107;
-  color:black;
-  font-weight:bold;
-}
+.startBtn{ background:#ffc107; color:black; font-weight:bold; }
+.option{ background:#32004d; color:white; }
+.option:hover{ background:#4d0073; }
 
-.option{
-  background:#32004d;
-  color:white;
-}
-
-.option:hover{
-  background:#4d0073;
-}
-
-.correct{
-  background:#28a745 !important;
-}
-
-.wrong{
-  background:#dc3545 !important;
-}
-
-.timer{
-  background:#1a0026;
-  padding:10px 20px;
-  border-radius:30px;
-  display:inline-block;
+.progress{
+  height:10px;
+  background:#444;
+  border-radius:10px;
   margin-bottom:15px;
-  font-size:20px;
 }
-
-.scoreBox{
-  font-size:20px;
-  margin-top:10px;
-}
-
-.playAgain{
+.progress-bar{
+  height:10px;
   background:#28a745;
+  width:0%;
+  border-radius:10px;
 }
+
+.levelBtn{
+  background:#32004d;
+}
+.locked{
+  background:#555;
+}
+
 </style>
 </head>
 <body>
 
-<!-- Start Screen -->
-<div id="startScreen" class="screen active">
-  <h1>Bangla Quiz</h1>
+<div id="levelScreen" class="screen active">
+  <h1>Minhajul Pro Quiz</h1>
   <div class="card">
-    <h2>🧠 আপনার জ্ঞান পরীক্ষা করুন</h2>
-    <button class="startBtn" onclick="startQuiz()">Start</button>
+    <h3>Level Select</h3>
+    <div id="levels"></div>
   </div>
 </div>
 
-<!-- Quiz Screen -->
 <div id="quizScreen" class="screen">
-  <h2>Bangla Quiz</h2>
-  <div class="timer">⏰ <span id="time">15</span></div>
+  <h2 id="levelTitle"></h2>
+  <div class="progress">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
   <div class="card">
     <h3 id="question"></h3>
     <div id="options"></div>
   </div>
 </div>
 
-<!-- Result Screen -->
 <div id="resultScreen" class="screen">
-  <h2>Your Score</h2>
   <div class="card">
-    <h3 id="finalText"></h3>
-    <div class="scoreBox">
-      Total Question: <span id="totalQ"></span><br>
-      Right Answer: <span id="rightA"></span><br>
-      Wrong Answer: <span id="wrongA"></span>
-    </div>
-    <button class="playAgain" onclick="restartQuiz()">Play Again</button>
+    <h2 id="resultText"></h2>
+    <button onclick="goHome()">Back to Levels</button>
   </div>
 </div>
 
 <script>
 
-const questions = [
-{q:"পৃথিবীর সবচেয়ে দ্রুত প্রাণী কোনটি?",o:["চিতা","ঘোড়া","গাধা","উট"],a:0},
-{q:"বাংলাদেশের রাজধানী কোথায়?",o:["চট্টগ্রাম","ঢাকা","রাজশাহী","খুলনা"],a:1},
-{q:"বাংলা বর্ণমালায় মোট কতটি বর্ণ আছে?",o:["৪৫","৫০","৪৯","৫২"],a:2},
-{q:"সূর্য কোন দিকে ওঠে?",o:["পশ্চিম","উত্তর","পূর্ব","দক্ষিণ"],a:2}
-];
+const quizLevels = {
 
-let current = 0;
+1:{ name:"🍎 ফল", pass:2, questions:[
+{q:"কোনটি ফল?",o:["আম","গাজর","আলু","পেঁয়াজ"],a:0},
+{q:"কোনটি সাইট্রাস ফল?",o:["কমলা","আলু","টমেটো","বাঁধাকপি"],a:0},
+{q:"কোনটি গাছে ধরে?",o:["কাঁঠাল","গাজর","আলু","মূলা"],a:0}
+]},
+
+2:{ name:"🥦 সবজি", pass:2, questions:[
+{q:"কোনটি সবজি?",o:["বাঁধাকপি","আম","কলা","লিচু"],a:0},
+{q:"গাজর কী?",o:["সবজি","ফল","ফুল","মাছ"],a:0},
+{q:"আলু কোথায় জন্মায়?",o:["মাটির নিচে","গাছে","জলে","আকাশে"],a:0}
+]},
+
+3:{ name:"🌍 দেশ", pass:2, questions:[
+{q:"বাংলাদেশের রাজধানী?",o:["ঢাকা","চট্টগ্রাম","রাজশাহী","খুলনা"],a:0},
+{q:"ভারতের রাজধানী?",o:["দিল্লি","মুম্বাই","কলকাতা","চেন্নাই"],a:0},
+{q:"জাপানের রাজধানী?",o:["টোকিও","বেইজিং","সিউল","ব্যাংকক"],a:0}
+]},
+
+4:{ name:"🔧 যন্ত্রপাতি", pass:2, questions:[
+{q:"হাতুড়ি কী কাজে লাগে?",o:["পেরেক ঠুকতে","কাটতে","ধুতে","রান্না"],a:0},
+{q:"স্ক্রু ড্রাইভার কী?",o:["স্ক্রু লাগাতে","কাপড় ধুতে","গাছ কাটতে","লিখতে"],a:0},
+{q:"করাত কী?",o:["কাঠ কাটতে","লিখতে","রান্না","মাছ ধরতে"],a:0}
+]}
+
+};
+
+let unlockedLevel = 1;
+let currentLevel;
+let currentQuestion = 0;
 let score = 0;
-let timer;
-let timeLeft = 15;
 
-function startQuiz(){
-  document.getElementById("startScreen").classList.remove("active");
+function renderLevels(){
+  const levelDiv = document.getElementById("levels");
+  levelDiv.innerHTML="";
+  Object.keys(quizLevels).forEach(level=>{
+    const btn=document.createElement("button");
+    btn.innerText="Level "+level+" "+quizLevels[level].name;
+    btn.className="levelBtn";
+    if(level>unlockedLevel){
+      btn.classList.add("locked");
+      btn.disabled=true;
+    }
+    btn.onclick=()=>startLevel(level);
+    levelDiv.appendChild(btn);
+  });
+}
+
+function startLevel(level){
+  currentLevel=level;
+  currentQuestion=0;
+  score=0;
+  document.getElementById("levelScreen").classList.remove("active");
   document.getElementById("quizScreen").classList.add("active");
+  document.getElementById("levelTitle").innerText="Level "+level+" "+quizLevels[level].name;
   loadQuestion();
 }
 
 function loadQuestion(){
-  resetTimer();
-  const q = questions[current];
-  document.getElementById("question").innerText = q.q;
-  const optDiv = document.getElementById("options");
+  const data=quizLevels[currentLevel];
+  const q=data.questions[currentQuestion];
+  document.getElementById("question").innerText=q.q;
+
+  const optDiv=document.getElementById("options");
   optDiv.innerHTML="";
 
   q.o.forEach((option,index)=>{
-    const btn = document.createElement("button");
+    const btn=document.createElement("button");
     btn.className="option";
     btn.innerText=option;
-    btn.onclick=()=>checkAnswer(index,btn);
+    btn.onclick=()=>checkAnswer(index);
     optDiv.appendChild(btn);
   });
+
+  document.getElementById("progressBar").style.width=
+  ((currentQuestion)/data.questions.length)*100+"%";
 }
 
-function checkAnswer(index,btn){
-  clearInterval(timer);
-  const correctIndex = questions[current].a;
-  if(index===correctIndex){
-    btn.classList.add("correct");
+function checkAnswer(index){
+  if(index===quizLevels[currentLevel].questions[currentQuestion].a){
     score++;
-  }else{
-    btn.classList.add("wrong");
   }
-  setTimeout(nextQuestion,1000);
-}
-
-function nextQuestion(){
-  current++;
-  if(current<questions.length){
+  currentQuestion++;
+  if(currentQuestion<quizLevels[currentLevel].questions.length){
     loadQuestion();
   }else{
-    showResult();
+    finishLevel();
   }
 }
 
-function showResult(){
+function finishLevel(){
   document.getElementById("quizScreen").classList.remove("active");
   document.getElementById("resultScreen").classList.add("active");
 
-  document.getElementById("finalText").innerText="আপনি "+score+" টি সঠিক উত্তর দিয়েছেন 🎉";
-  document.getElementById("totalQ").innerText=questions.length;
-  document.getElementById("rightA").innerText=score;
-  document.getElementById("wrongA").innerText=questions.length-score;
+  if(score>=quizLevels[currentLevel].pass){
+    document.getElementById("resultText").innerText="🎉 Level Completed!";
+    unlockedLevel++;
+  }else{
+    document.getElementById("resultText").innerText="❌ Try Again!";
+  }
+
+  renderLevels();
 }
 
-function restartQuiz(){
-  current=0;
-  score=0;
+function goHome(){
   document.getElementById("resultScreen").classList.remove("active");
-  document.getElementById("startScreen").classList.add("active");
+  document.getElementById("levelScreen").classList.add("active");
 }
 
-function resetTimer(){
-  timeLeft=15;
-  document.getElementById("time").innerText=timeLeft;
-  clearInterval(timer);
-  timer=setInterval(()=>{
-    timeLeft--;
-    document.getElementById("time").innerText=timeLeft;
-    if(timeLeft<=0){
-      clearInterval(timer);
-      nextQuestion();
-    }
-  },1000);
-}
+renderLevels();
 
 </script>
 </body>
