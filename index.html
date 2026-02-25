@@ -12,51 +12,50 @@ body{
   color:white;
   text-align:center;
 }
-
-.screen{ display:none; padding:20px; }
-.active{ display:block; }
+.screen{display:none;padding:20px;}
+.active{display:block;}
 
 .card{
   background:#1a0026;
   padding:20px;
-  border-radius:25px;
+  border-radius:20px;
   margin-top:20px;
 }
 
 button{
   width:100%;
-  padding:15px;
-  margin:10px 0;
+  padding:12px;
+  margin:8px 0;
   border:none;
-  border-radius:30px;
-  font-size:18px;
+  border-radius:25px;
+  font-size:16px;
   cursor:pointer;
 }
 
-.startBtn{ background:#ffc107; color:black; font-weight:bold; }
-.option{ background:#32004d; color:white; }
-.option:hover{ background:#4d0073; }
+.option{background:#32004d;color:white;}
+.correct{background:#28a745 !important;}
+.wrong{background:#dc3545 !important;}
+
+.levelBtn{background:#ffc107;color:black;font-weight:bold;}
 
 .progress{
-  height:10px;
+  height:8px;
   background:#444;
   border-radius:10px;
-  margin-bottom:15px;
+  margin-bottom:10px;
 }
-.progress-bar{
-  height:10px;
+.bar{
+  height:8px;
   background:#28a745;
   width:0%;
   border-radius:10px;
 }
 
-.levelBtn{
-  background:#32004d;
+.shareBtn{
+  background:#ff9800;
+  color:white;
+  font-weight:bold;
 }
-.locked{
-  background:#555;
-}
-
 </style>
 </head>
 <body>
@@ -64,25 +63,29 @@ button{
 <div id="levelScreen" class="screen active">
   <h1>Minhajul Pro Quiz</h1>
   <div class="card">
-    <h3>Level Select</h3>
     <div id="levels"></div>
   </div>
 </div>
 
 <div id="quizScreen" class="screen">
   <h2 id="levelTitle"></h2>
-  <div class="progress">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
+  <div class="progress"><div class="bar" id="progressBar"></div></div>
   <div class="card">
     <h3 id="question"></h3>
     <div id="options"></div>
+    <p id="levelScore"></p>
   </div>
 </div>
 
 <div id="resultScreen" class="screen">
   <div class="card">
-    <h2 id="resultText"></h2>
+    <h2 id="levelResult"></h2>
+    <h3 id="totalResult"></h3>
+
+    <button class="shareBtn" onclick="shareScore()">
+      📤 Share Your Score
+    </button>
+
     <button onclick="goHome()">Back to Levels</button>
   </div>
 </div>
@@ -91,57 +94,53 @@ button{
 
 const quizLevels = {
 
-1:{ name:"🍎 ফল", pass:2, questions:[
-{q:"কোনটি ফল?",o:["আম","গাজর","আলু","পেঁয়াজ"],a:0},
-{q:"কোনটি সাইট্রাস ফল?",o:["কমলা","আলু","টমেটো","বাঁধাকপি"],a:0},
-{q:"কোনটি গাছে ধরে?",o:["কাঁঠাল","গাজর","আলু","মূলা"],a:0}
+1:{name:"🍎 ফল",questions:[
+{q:"কোনটি ফল?",o:["আম","গাজর","আলু","পেঁয়াজ"],a:"আম"},
+{q:"কোনটি সাইট্রাস ফল?",o:["কমলা","আলু","টমেটো","বাঁধাকপি"],a:"কমলা"},
+{q:"কোনটি গাছে ধরে?",o:["কাঁঠাল","গাজর","আলু","মূলা"],a:"কাঁঠাল"},
+{q:"লিচু কী?",o:["ফল","সবজি","মাছ","পাখি"],a:"ফল"},
+{q:"কলা কী?",o:["ফল","সবজি","দেশ","যন্ত্র"],a:"ফল"},
+{q:"আনারস কী?",o:["ফল","সবজি","ফুল","পাখি"],a:"ফল"},
+{q:"পেঁপে কী?",o:["ফল","দেশ","যন্ত্র","মাছ"],a:"ফল"}
 ]},
 
-2:{ name:"🥦 সবজি", pass:2, questions:[
-{q:"কোনটি সবজি?",o:["বাঁধাকপি","আম","কলা","লিচু"],a:0},
-{q:"গাজর কী?",o:["সবজি","ফল","ফুল","মাছ"],a:0},
-{q:"আলু কোথায় জন্মায়?",o:["মাটির নিচে","গাছে","জলে","আকাশে"],a:0}
-]},
-
-3:{ name:"🌍 দেশ", pass:2, questions:[
-{q:"বাংলাদেশের রাজধানী?",o:["ঢাকা","চট্টগ্রাম","রাজশাহী","খুলনা"],a:0},
-{q:"ভারতের রাজধানী?",o:["দিল্লি","মুম্বাই","কলকাতা","চেন্নাই"],a:0},
-{q:"জাপানের রাজধানী?",o:["টোকিও","বেইজিং","সিউল","ব্যাংকক"],a:0}
-]},
-
-4:{ name:"🔧 যন্ত্রপাতি", pass:2, questions:[
-{q:"হাতুড়ি কী কাজে লাগে?",o:["পেরেক ঠুকতে","কাটতে","ধুতে","রান্না"],a:0},
-{q:"স্ক্রু ড্রাইভার কী?",o:["স্ক্রু লাগাতে","কাপড় ধুতে","গাছ কাটতে","লিখতে"],a:0},
-{q:"করাত কী?",o:["কাঠ কাটতে","লিখতে","রান্না","মাছ ধরতে"],a:0}
+2:{name:"🐾 পশু-পাখি",questions:[
+{q:"জাতীয় পশু?",o:["রয়েল বেঙ্গল টাইগার","হাতি","ঘোড়া","গরু"],a:"রয়েল বেঙ্গল টাইগার"},
+{q:"কোনটি পাখি?",o:["কাক","বাঘ","গরু","ছাগল"],a:"কাক"},
+{q:"উট কোথায় থাকে?",o:["মরুভূমি","জল","গাছে","আকাশে"],a:"মরুভূমি"},
+{q:"হাতি কী?",o:["পশু","পাখি","ফল","দেশ"],a:"পশু"},
+{q:"মাছ কোথায় থাকে?",o:["জলে","গাছে","মাটিতে","আকাশে"],a:"জলে"},
+{q:"ময়ূর কী?",o:["পাখি","ফল","যন্ত্র","দেশ"],a:"পাখি"},
+{q:"বাঘ কী?",o:["পশু","ফল","পাখি","যন্ত্র"],a:"পশু"}
 ]}
 
 };
 
-let unlockedLevel = 1;
 let currentLevel;
-let currentQuestion = 0;
-let score = 0;
+let currentQuestion=0;
+let levelScore=0;
+let totalScore=0;
+
+function shuffle(array){
+  return array.sort(()=>Math.random()-0.5);
+}
 
 function renderLevels(){
-  const levelDiv = document.getElementById("levels");
-  levelDiv.innerHTML="";
+  const div=document.getElementById("levels");
+  div.innerHTML="";
   Object.keys(quizLevels).forEach(level=>{
     const btn=document.createElement("button");
     btn.innerText="Level "+level+" "+quizLevels[level].name;
     btn.className="levelBtn";
-    if(level>unlockedLevel){
-      btn.classList.add("locked");
-      btn.disabled=true;
-    }
     btn.onclick=()=>startLevel(level);
-    levelDiv.appendChild(btn);
+    div.appendChild(btn);
   });
 }
 
 function startLevel(level){
   currentLevel=level;
   currentQuestion=0;
-  score=0;
+  levelScore=0;
   document.getElementById("levelScreen").classList.remove("active");
   document.getElementById("quizScreen").classList.add("active");
   document.getElementById("levelTitle").innerText="Level "+level+" "+quizLevels[level].name;
@@ -153,45 +152,82 @@ function loadQuestion(){
   const q=data.questions[currentQuestion];
   document.getElementById("question").innerText=q.q;
 
+  let options=shuffle([...q.o]);
   const optDiv=document.getElementById("options");
   optDiv.innerHTML="";
 
-  q.o.forEach((option,index)=>{
+  options.forEach(option=>{
     const btn=document.createElement("button");
     btn.className="option";
     btn.innerText=option;
-    btn.onclick=()=>checkAnswer(index);
+    btn.onclick=()=>checkAnswer(option,q.a);
     optDiv.appendChild(btn);
   });
 
   document.getElementById("progressBar").style.width=
   ((currentQuestion)/data.questions.length)*100+"%";
+
+  document.getElementById("levelScore").innerText="Level Score: "+levelScore;
 }
 
-function checkAnswer(index){
-  if(index===quizLevels[currentLevel].questions[currentQuestion].a){
-    score++;
+function checkAnswer(selected,correct){
+  const buttons=document.querySelectorAll(".option");
+
+  buttons.forEach(btn=>{
+    if(btn.innerText===correct){
+      btn.classList.add("correct");
+    }
+    if(btn.innerText===selected && selected!==correct){
+      btn.classList.add("wrong");
+    }
+    btn.disabled=true;
+  });
+
+  if(selected===correct){
+    levelScore+=10;
+    totalScore+=10;
   }
-  currentQuestion++;
-  if(currentQuestion<quizLevels[currentLevel].questions.length){
-    loadQuestion();
-  }else{
-    finishLevel();
-  }
+
+  setTimeout(()=>{
+    currentQuestion++;
+    if(currentQuestion<quizLevels[currentLevel].questions.length){
+      loadQuestion();
+    }else{
+      finishLevel();
+    }
+  },1000);
 }
 
 function finishLevel(){
   document.getElementById("quizScreen").classList.remove("active");
   document.getElementById("resultScreen").classList.add("active");
 
-  if(score>=quizLevels[currentLevel].pass){
-    document.getElementById("resultText").innerText="🎉 Level Completed!";
-    unlockedLevel++;
-  }else{
-    document.getElementById("resultText").innerText="❌ Try Again!";
-  }
+  document.getElementById("levelResult").innerText=
+  "Level Score: "+levelScore;
 
-  renderLevels();
+  document.getElementById("totalResult").innerText=
+  "Total Score: "+totalScore;
+
+  localStorage.setItem("finalScore", totalScore);
+}
+
+function shareScore(){
+  let score = localStorage.getItem("finalScore") || totalScore;
+
+  let text =
+  "🧠 I scored " + score +
+  " points in Minhajul Pro Quiz! 🎉\n\n" +
+  "Can you beat my score? 😎\n" +
+  "Play now and challenge me!";
+
+  if(navigator.share){
+    navigator.share({
+      title:"Minhajul Pro Quiz",
+      text:text
+    });
+  }else{
+    window.open("https://wa.me/?text="+encodeURIComponent(text));
+  }
 }
 
 function goHome(){
